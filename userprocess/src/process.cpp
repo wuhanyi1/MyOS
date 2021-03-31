@@ -37,6 +37,7 @@ void start_process(void* filename_) {//
    }
    proc_stack->esp = (void*)((uint32_t)ustack + PG_SIZE);//在用户内存池申请一片物理页
    proc_stack->ss = SELECTOR_U_DATA; 
+   //k_printf("")
    asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (proc_stack) : "memory");//直接恢复现常，从中断返回
 }
 
@@ -102,7 +103,7 @@ void create_user_vaddr_bitmap(struct task_struct* user_prog) {
     uint32_t bitmap_pg_cnt = DIV_ROUND_UP((0xc0000000 - USER_VADDR_START) / PG_SIZE / 8 , PG_SIZE);
     user_prog->userprog_vaddr.pool_bitmap.bits = (uint8_t*)malloc_page(PF_KERNEL,bitmap_pg_cnt);//在内核地址空间申请位图索要的页
     user_prog->userprog_vaddr.pool_bitmap.btmp_bytes_len = (0xc0000000 - USER_VADDR_START) / PG_SIZE / 8;
-    user_prog->userprog_vaddr.pool_bitmap.init();
+    //user_prog->userprog_vaddr.pool_bitmap.init();
    //bitmap_init(&user_prog->userprog_vaddr.vaddr_bitmap);
 }
 
@@ -114,18 +115,19 @@ void process_execute(void* filename, char* name) {
    thread->init(name,default_prio,start_process,filename);//由start_process函数把文件加载进来
    //init_thread(thread, name, default_prio); 
    create_user_vaddr_bitmap(thread);//初始化管理用户虚拟地址空间的位图
-   //thread_create(thread, start_process, filename);
-   thread->pgdir = create_page_dir();//用户进程有页目录表，这是和内核线程区分的标志
    
+   thread->userprog_vaddr.lock.init();//初始化用户虚拟内存池的锁
+   thread->pgdir = create_page_dir();//用户进程有页目录表，这是和内核线程区分的标志
+   block_desc_init(thread->u_block_desc);
+
    enum intr_status old_status = intr_disable();
-   //ASSERT(!elem_find(&thread_ready_list, &thread->general_tag));
+   
    thread_ready_list.push_front(&thread->general_tag);
    //list_append(&thread_ready_list, &thread->general_tag);
 
    //ASSERT(!elem_find(&thread_all_list, &thread->all_list_tag));
    thread_all_list.push_front(&thread->all_list_tag);
-   //list_append(&thread_all_list, &thread->all_list_tag);
-
+   
    intr_set_status(old_status);
 }
 

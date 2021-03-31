@@ -7,6 +7,7 @@ int itoa(uint32_t val, char* buf,int radix); //iota的函数声明也放这里
 void memset(void* src_,uint8_t val,uint32_t size);
 void memcpy(void* dst_, void* src_, uint32_t size);
 char* strcpy(char* dst_, const char* src_);
+uint32_t strlen(const char* str);
 
 const int MAXBUF = 4096;
 class string;//前向声明，不写会出错

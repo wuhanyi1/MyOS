@@ -23,7 +23,7 @@ void console_release() {
 /* 终端中输出字符串 */
 void console_put_str(const char* str) {
    console_acquire(); 
-   k_printf("%s ",str); 
+   k_printf(str); 
    console_release();
 }
 
@@ -37,6 +37,6 @@ void console_put_char(uint8_t char_asci) {
 /* 终端中输出16进制整数 */
 void console_put_int(uint32_t num) {
    console_acquire(); 
-   k_printf("%d ",num); 
+   k_printf("%p",num); 
    console_release();
 }

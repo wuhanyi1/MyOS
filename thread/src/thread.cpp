@@ -7,12 +7,15 @@
 #include "k_printf.h"
 #include "process.h"
 #include "memory.h"
+#include "sync.h"
 #define PG_SIZE 4096
 
 task_struct* main_thread;    // 主线程PCB,也就是OS内核一直在执行的执行流，就是OS的main函数开启的执行流
 list thread_ready_list;	    // 就绪队列
 list thread_all_list;	    // 所有任务队列
 static list_elem* thread_tag;// 用于保存队列中的线程结点
+lock pid_lock;             //分配pid的锁
+
 //void switch_to(task_struct* cur, task_struct* next);
 extern "C"{
     void switch_to(task_struct* cur, task_struct* next);
@@ -39,6 +42,17 @@ void task_struct::thread_unblock() {
    intr_set_status(old_status);
 }
 
+/* 分配pid */
+static pid_t allocate_pid(void) {
+   static pid_t next_pid = 0;
+   pid_lock.lock_acquire();
+   next_pid++;
+   pid_lock.lock_release();
+   return next_pid;
+}
+
+
+
 /* 获取当前线程pcb指针 */
 struct task_struct* running_thread() {
    uint32_t esp; 
@@ -57,6 +71,7 @@ static void kernel_thread(thread_func* function, void* func_arg) {
 /* 初始化线程s所有信息 */
 void task_struct::init(char* name, int prio,thread_func function, void* func_arg) {
    memset(this, 0, sizeof(task_struct));//将当前PCB全部清0
+   pid = allocate_pid();
    strcpy(this->name, name);
 
    if (this == main_thread) {
@@ -151,7 +166,7 @@ void thread_init(void) {
    k_printf("thread_init start\n");
    thread_ready_list.init();
    thread_all_list.init();
-   
+   pid_lock.init();
 /* 将当前main函数创建为线程 */
    make_main_thread();
    k_printf("thread_init done\n");

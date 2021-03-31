@@ -83,8 +83,14 @@ void memcpy(void* dst_, void* src_, uint32_t size){
 
 /* 将字符串从src_复制到dst_ */
 char* strcpy(char* dst_, const char* src_) {
-   //ASSERT(dst_ != NULL && src_ != NULL);
    char* r = dst_;		       // 用来返回目的字符串起始地址
    while((*dst_++ = *src_++));
    return r;
+}
+
+/* 返回字符串长度 */
+uint32_t strlen(const char* str) {
+   int i = 0;
+   while(str[i] != '\0') i++;
+   return i;
 }

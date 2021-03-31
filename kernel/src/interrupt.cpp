@@ -15,11 +15,13 @@
 #define EFLAGS_IF   0x00000200       // eflags寄存器中的if位为1
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" : "=g" (EFLAG_VAR))  //获得eflags寄存器的值
 
-extern uint32_t syscall_handler(void); //系统调用
-
 static struct gate_desc idt[IDT_DESC_CNT];   // idt是中断描述符表,本质上就是个中断门描述符数组
 
 const char* intr_name[IDT_DESC_CNT];		     // 用于保存异常的名字，异常就相当于CPU保留的中断号
+
+extern "C"{
+   uint32_t syscall_handler(void);//0x80的中断处理函数
+}
 
 /********    定义中断处理程序数组    ********
  * 在kernel.S中定义的intrXXentry只是中断处理程序的入口,
@@ -69,14 +71,14 @@ static void make_idt_desc(gate_desc& p_gdesc, uint8_t attr, intr_handler functio
 
 /*初始化中断描述符表*/
 static void idt_desc_init(void) {
-   //int lastindex = IDT_DESC_CNT - 1;
+   int lastindex = IDT_DESC_CNT - 1;
    //为操作系统除0x80以外的终端们描述符的初始化
    for (int i = 0; i < IDT_DESC_CNT; i++) {
       make_idt_desc(idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]); //系统异常DPL为0，只能内核访问
    }
 /* 为0x80即系统调用的中断号创建描述符，系统调用对应的中断门dpl为3,
  * 中断处理程序为单独的syscall_handler */
-   //make_idt_desc(idt[lastindex], IDT_DESC_ATTR_DPL3, syscall_handler);
+   make_idt_desc(idt[lastindex], IDT_DESC_ATTR_DPL3, (void*)syscall_handler);
    k_printf("   idt_desc_init done\n");
 }
 

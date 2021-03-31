@@ -6,7 +6,7 @@
 
 /* 自定义通用函数类型,它将在很多线程函数中做为形参类型 */
 using thread_func = void(void*);
-
+using pid_t = uint16_t;
 /* 进程或线程的状态 */
 enum task_status {
    TASK_RUNNING,
@@ -84,6 +84,7 @@ struct thread_stack {
 /* 进程或线程的pcb,程序控制块 */
 struct task_struct {
    uint32_t* self_kstack;	 // 记录线程内核栈顶指针此时的位置
+   pid_t pid;//线程\进程id
    enum task_status status;
    char name[16];
    uint8_t priority;    // 我们这里优先级就是每个进程、线程能运行的时钟周期数
@@ -100,7 +101,11 @@ struct task_struct {
    list_elem all_list_tag;
 
    uint32_t* pgdir;              // 进程自己页目录表的虚拟地址，这个变量不为NULL就是进程，为NULL就是线程
+
    pool userprog_vaddr;   // 用户进程的虚拟地址池,内核线程的PCB这个字段没用
+
+   mem_block_desc u_block_desc[DESC_CNT];//用于管理用户堆区小内存块的分配与回收
+   
    uint32_t stack_magic;	 // 用这串数字做栈的边界标记,用于检测栈的溢出，即防止栈向下扩展太多覆盖掉PCB的内容
    void thread_block(enum task_status stat);
    void thread_unblock();

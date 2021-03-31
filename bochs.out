@@ -31,7 +31,7 @@
 00000000000i[      ]   Sound support: no
 00000000000i[      ]   USB support: no
 00000000000i[      ]   VGA extension support: vbe
-00000000000i[MEM0  ] allocated memory at 0x7f0ba9ee3010. after alignment, vector=0x7f0ba9ee4000
+00000000000i[MEM0  ] allocated memory at 0x7f63e91d1010. after alignment, vector=0x7f63e91d2000
 00000000000i[MEM0  ] 32.00MB
 00000000000i[MEM0  ] mem block size = 0x00020000, blocks=256
 00000000000i[MEM0  ] rom at 0xfffe0000/131072 ('/home/wuhanyi/bochs/share/bochs/BIOS-bochs-latest')
@@ -41,7 +41,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Mon Mar 29 22:27:26 2021 (time0=1617028046)
+00000000000i[CMOS  ] Setting initial clock to: Thu Apr  1 01:22:08 2021 (time0=1617211328)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -177,7 +177,7 @@
 00000322254i[BIOS  ] ram_end=32MB
 00000362778i[BIOS  ] Found 1 cpu(s)
 00000376430i[BIOS  ] bios_table_addr: 0x000f9db8 end=0x000fcc00
-00000613420i[XGUI  ] charmap update. Font is 9 x 16
+00000610300i[XGUI  ] charmap update. Font is 9 x 16
 00000704251i[PCI   ] i440FX PMC write to PAM register 59 (TLB Flush)
 00001032181i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0b
 00001032200i[P2ISA ] PCI IRQ routing: PIRQB# set to 0x09
@@ -210,7 +210,28 @@
 00001548630i[BXVGA ] VBE known Display Interface b0c5
 00001551273i[VBIOS ] VBE Bios $Id: vbe.c 228 2020-01-02 23:09:02Z vruppert $
 00001899112i[BIOS  ] ata0-0: PCHS=121/16/63 translation=none LCHS=121/16/63
-00002758564i[XGUI  ] charmap update. Font is 9 x 16
+00002750532i[XGUI  ] charmap update. Font is 9 x 16
 00005346290i[BIOS  ] IDE time out
 00017404781i[BIOS  ] Booting from 0000:7c00
-00130615690i[      ] Ctrl-C detected in signal handler.
+06672797837i[      ] Ctrl-C detected in signal handler.
+06672797838i[      ] dbg: Quit
+06672797838i[CPU0  ] CPU is in protected mode (active)
+06672797838i[CPU0  ] CS.mode = 32 bit
+06672797838i[CPU0  ] SS.mode = 32 bit
+06672797838i[CPU0  ] EFER   = 0x00000000
+06672797838i[CPU0  ] | EAX=00000000  EBX=0023740c  ECX=00000004  EDX=00000001
+06672797838i[CPU0  ] | ESP=c0133e28  EBP=c0133e40  ESI=0023750c  EDI=00000000
+06672797838i[CPU0  ] | IOPL=0 id vip vif ac vm rf nt of df IF tf SF zf af PF cf
+06672797838i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
+06672797838i[CPU0  ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+06672797838i[CPU0  ] |  DS:0033( 0006| 0|  3) 00000000 ffffffff 1 1
+06672797838i[CPU0  ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+06672797838i[CPU0  ] |  ES:0033( 0006| 0|  3) 00000000 ffffffff 1 1
+06672797838i[CPU0  ] |  FS:0033( 0006| 0|  3) 00000000 ffffffff 1 1
+06672797838i[CPU0  ] |  GS:0000( 0000| 0|  0) 00000000 00000000 0 0
+06672797838i[CPU0  ] | EIP=c000174b (c000174b)
+06672797838i[CPU0  ] | CR0=0xe0000011 CR2=0x00000000
+06672797838i[CPU0  ] | CR3=0x00100000 CR4=0x00000000
+06672797838i[CMOS  ] Last time is 1617212996 (Thu Apr  1 01:49:56 2021)
+06672797838i[XGUI  ] Exit
+06672797838i[SIM   ] quit_sim called with exit code 0
