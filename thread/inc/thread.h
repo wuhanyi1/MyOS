@@ -4,6 +4,8 @@
 #include "list.h"
 #include "memory.h"
 
+#define MAX_FILES_OPEN_PER_PROC 8
+
 /* 自定义通用函数类型,它将在很多线程函数中做为形参类型 */
 using thread_func = void(void*);
 using pid_t = uint16_t;
@@ -106,6 +108,9 @@ struct task_struct {
 
    mem_block_desc u_block_desc[DESC_CNT];//用于管理用户堆区小内存块的分配与回收
    
+   int32_t fd_table[MAX_FILES_OPEN_PER_PROC];	// 已打开文件数组
+   uint32_t cwd_inode_nr;	 // 进程所在的工作目录的inode编号
+
    uint32_t stack_magic;	 // 用这串数字做栈的边界标记,用于检测栈的溢出，即防止栈向下扩展太多覆盖掉PCB的内容
    void thread_block(enum task_status stat);
    void thread_unblock();
@@ -116,4 +121,5 @@ task_struct* thread_create(char* name, int prio, thread_func function, void* fun
 struct task_struct* running_thread(void);
 void schedule(void);
 void thread_init(void);
+void thread_yield(void); 
 #endif

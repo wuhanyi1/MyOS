@@ -18,10 +18,10 @@ int main(void) {
    k_printf("I am kernel\n");
    init_all();
    intr_enable();
-   process_execute((void*)u_prog_a, (char*)"u_prog_a");
-   process_execute((void*)u_prog_b, (char*)"u_prog_b");
-   thread_create((char*)"k_thread_a", 31, k_thread_a, (void*)"I am thread_a");
-   thread_create((char*)"k_thread_b", 31, k_thread_b, (void*)"I am thread_b");
+   //process_execute((void*)u_prog_a, (char*)"u_prog_a");
+   //process_execute((void*)u_prog_b, (char*)"u_prog_b");
+   //thread_create((char*)"k_thread_a", 300, k_thread_a, (void*)"I am thread_a");
+   //thread_create((char*)"k_thread_b", 31, k_thread_b, (void*)"I am thread_b");
    while(1);
    return 0;
 }
@@ -31,8 +31,8 @@ void k_thread_a(void* arg) {
    void* addr1 = sys_malloc(256);
    void* addr2 = sys_malloc(255);
    void* addr3 = sys_malloc(254);
-   printf(" k_thread_a malloc addr:%p,%p,%p\n", (int)addr1, (int)addr2, (int)addr3);
-   printf("phy add is:%p,%p,%p\n",addr_v2p((uint32_t)addr1),addr_v2p((uint32_t)addr2),addr_v2p((uint32_t)addr3));
+   printfk(" k_thread_a malloc addr:%p,%p,%p\n", (int)addr1, (int)addr2, (int)addr3);
+   printfk("phy add is:%p,%p,%p\n",addr_v2p((uint32_t)addr1),addr_v2p((uint32_t)addr2),addr_v2p((uint32_t)addr3));
 
    int cpu_delay = 100000;
    while(cpu_delay-- > 0);
@@ -47,8 +47,8 @@ void k_thread_b(void* arg) {
    void* addr1 = sys_malloc(256);
    void* addr2 = sys_malloc(255);
    void* addr3 = sys_malloc(254);
-   printf(" k_thread_a malloc addr:%p,%p,%p\n", (int)addr1, (int)addr2, (int)addr3);
-   printf("phy add is:%p,%p,%p\n",addr_v2p((uint32_t)addr1),addr_v2p((uint32_t)addr2),addr_v2p((uint32_t)addr3));
+   printfk(" k_thread_b malloc addr:%p,%p,%p\n", (int)addr1, (int)addr2, (int)addr3);
+   printfk("phy add is:%p,%p,%p\n",addr_v2p((uint32_t)addr1),addr_v2p((uint32_t)addr2),addr_v2p((uint32_t)addr3));
 
    int cpu_delay = 100000;
    while(cpu_delay-- > 0);

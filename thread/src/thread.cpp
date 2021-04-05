@@ -10,6 +10,7 @@
 #include "sync.h"
 #define PG_SIZE 4096
 
+task_struct* idle_thread;    // idle线程
 task_struct* main_thread;    // 主线程PCB,也就是OS内核一直在执行的执行流，就是OS的main函数开启的执行流
 list thread_ready_list;	    // 就绪队列
 list thread_all_list;	    // 所有任务队列
@@ -19,6 +20,28 @@ lock pid_lock;             //分配pid的锁
 //void switch_to(task_struct* cur, task_struct* next);
 extern "C"{
     void switch_to(task_struct* cur, task_struct* next);
+}
+
+/* 系统空闲时运行的线程 */
+static void idle(void* arg UNUSED) {
+   while(1) {
+      running_thread()->thread_block(TASK_BLOCKED);//将自己再次加入阻塞队列
+         
+      //执行hlt时必须要保证目前处在开中断的情况下
+      asm volatile ("sti; hlt" : : : "memory");
+   }
+}
+
+/* 主动让出cpu,换其它线程运行 */
+void thread_yield(void) {
+   struct task_struct* cur = running_thread();   
+   enum intr_status old_status = intr_disable();
+   //ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+   thread_ready_list.push_front(&cur->general_tag);
+   //list_append(&thread_ready_list, &cur->general_tag);
+   cur->status = TASK_READY;
+   schedule();
+   intr_set_status(old_status);
 }
 
 /* 当前线程将自己阻塞,标志其状态为stat. */
@@ -151,6 +174,9 @@ void schedule() {
 //        k_printf("ready list is empty!!!!!!!!\n");
 //    }
 /* 将thread_ready_list队列中的第一个就绪线程弹出,准备将其调度上cpu. */
+   if(thread_ready_list.is_empty()){//如果就绪队列为空，将idle_thread线程唤醒
+      idle_thread->thread_unblock();
+   }
    thread_tag = thread_ready_list.pop_back();   
    struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
    next->status = TASK_RUNNING;
@@ -169,6 +195,7 @@ void thread_init(void) {
    pid_lock.init();
 /* 将当前main函数创建为线程 */
    make_main_thread();
+   idle_thread = thread_create("idle",10,idle,nullptr);//初始化idle线程
    k_printf("thread_init done\n");
 }
 

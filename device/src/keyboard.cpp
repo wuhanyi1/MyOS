@@ -201,9 +201,9 @@ static void intr_keyboard_handler(void) {
       * cur_char的asc码-字符a的asc码, 此差值比较小,
       * 属于asc码表中不可见的字符部分.故不会产生可见字符.
       * 我们在shell中将ascii值为l-a和u-a的分别处理为清屏和删除输入的快捷键*/
-	    if ((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u')) {
-	        cur_char -= 'a';
-	    }
+	   //  if ((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u')) {
+	   //      cur_char -= 'a';
+	   //  }
       /****************************************************************/
       
    /* 若kbd_buf中未满并且待加入的cur_char不为0,

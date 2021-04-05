@@ -9,7 +9,7 @@ CFLAGS := -std=c++11 -m32 -c -Wall -I ./lib/inc  -I ./kernel/inc -I ./device/inc
 obj := build/main.o build/k_printf.o build/string.o build/itoa.o build/init.o build/interrupt.o \
 build/kernel.o build/timer.o  build/list.o build/bitmap.o build/thread.o build/memory.o build/switch.o \
 build/console.o build/sync.o build/keyboard.o build/process.o build/tss.o build/syscall.o \
-build/syscall_init.o build/stdio.o
+build/syscall_init.o build/stdio.o build/ide.o
 
 all:build/kernel.bin build/mbr.o build/loader.o 
 

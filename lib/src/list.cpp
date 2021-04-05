@@ -63,19 +63,19 @@ bool list::find(list_elem* obj_elem) {
 
 /* 判断链表中是否有符合func这个条件的元素，有就返回。func是判断函数，判断元素是否符合条件arg */
 list_elem* list::list_traversal(function func, int arg) {
-   list_elem* elem = head.next;
+   list_elem* elem = tail.prev;
 /* 如果队列为空,就必然没有符合条件的结点,故直接返回NULL */
    if (is_empty()) { 
       return (list_elem*)NULL;
    }
 
-   while (elem != &tail) {
+   while (elem != &head) {
       if (func(elem, arg)) {		  // func返回ture则认为该元素在回调函数中符合条件,命中,故停止继续遍历
 	      return elem;
       }					 
-      elem = elem->next;	       
+      elem = elem->prev;	       
    }
-   return (list_elem*)NULL;
+   return nullptr;
 }
 
 /* 判断链表是否为空,空时返回true,否则返回false */
