@@ -15,7 +15,7 @@ void panic_spin(char* filename, int line, const char* func, const char* conditio
    #define ASSERT(CONDITION)                                      \
       if (CONDITION) {} else {                                    \
   /* 符号#让编译器将宏的参数转化为字符串字面量 */		  \
-	 PANIC(#CONDITION);                                       \
+	      PANIC(#CONDITION);                                       \
       }
 #endif /*__NDEBUG */
 

@@ -23,5 +23,5 @@ struct super_block {
    uint32_t dir_entry_size;	    // 目录项大小
 
    uint8_t  pad[460];		    // 加上460字节,凑够512字节1扇区大小
-} __attribute__ ((packed));
+} __attribute__ ((packed));//取消编译器的对齐优化
 #endif

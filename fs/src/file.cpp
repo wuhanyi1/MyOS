@@ -12,15 +12,15 @@
 
 #define DEFAULT_SECS 1
 
-/* 文件表 */
+/* 全局打开文件表 */
 struct file file_table[MAX_FILE_OPEN];
 
 /* 从文件表file_table中获取一个空闲位,成功返回下标,失败返回-1 */
 int32_t get_free_slot_in_global(void) {
    uint32_t fd_idx = 3;
    while (fd_idx < MAX_FILE_OPEN) {
-      if (file_table[fd_idx].fd_inode == NULL) {
-	 break;
+      if (file_table[fd_idx].fd_inode == nullptr) {
+	      break;
       }
       fd_idx++;
    }
@@ -97,11 +97,30 @@ void bitmap_sync(struct partition* part, uint32_t bit_idx, uint8_t btmp_type) {
    ide_write(part->my_disk, sec_lba, bitmap_off, 1);
 }
 
+//根据rool_back回收资源
+static int32_t src_rm(uint8_t rollback_step,int fd_idx,inode* new_file_inode,int32_t inode_no,void* io_buf){
+   /*创建文件需要创建相关的多个资源,若某步失败则会执行到下面的回滚步骤 */
+   switch (rollback_step) {
+      case 3:
+	 /* 失败时,将file_table中的相应位清空 */
+	 memset(&file_table[fd_idx], 0, sizeof(struct file)); 
+      case 2:
+	 sys_free(new_file_inode);
+      case 1:
+	 /* 如果新文件的i结点创建失败,之前位图中分配的inode_no也要恢复 */
+	   cur_part->inode_bitmap.bitmap_set(inode_no, 0);
+     //bitmap_set(&cur_part->inode_bitmap, inode_no, 0);
+	 break;
+   }
+   sys_free(io_buf);
+   return -1;   
+}
+
 /* 创建文件,若成功则返回文件描述符,否则返回-1 */
 int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    /* 后续操作的公共缓冲区 */
    void* io_buf = sys_malloc(1024);
-   if (io_buf == NULL) {
+   if (io_buf == nullptr) {
       printfk("in file_creat: sys_malloc for io_buf failed\n");
       return -1;
    }
@@ -118,10 +137,10 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
 /* 此inode要从堆中申请内存,不可生成局部变量(函数退出时会释放)
  * 因为file_table数组中的文件描述符的inode指针要指向它.*/
    struct inode* new_file_inode = (struct inode*)sys_malloc(sizeof(struct inode)); 
-   if (new_file_inode == NULL) {
+   if (new_file_inode == nullptr) {
       printfk("file_create: sys_malloc for inode failded\n");
       rollback_step = 1;
-      goto rollback;
+      return src_rm(rollback_step,-1,nullptr,inode_no,io_buf);
    }
    inode_init(inode_no, new_file_inode);	    // 初始化i结点
 
@@ -130,7 +149,7 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    if (fd_idx == -1) {
       printfk("exceed max open files\n");
       rollback_step = 2;
-      goto rollback;
+      return src_rm(rollback_step,-1,new_file_inode,-1,io_buf);
    }
 
    file_table[fd_idx].fd_inode = new_file_inode;
@@ -148,7 +167,7 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    if (!sync_dir_entry(parent_dir, &new_dir_entry, io_buf)) {
       printfk("sync dir_entry to disk failed\n");
       rollback_step = 3;
-      goto rollback;
+      return src_rm(rollback_step,fd_idx,nullptr,-1,io_buf);
    }
 
    memset(io_buf, 0, 1024);
@@ -170,22 +189,6 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    sys_free(io_buf);
    return pcb_fd_install(fd_idx);
 
-/*创建文件需要创建相关的多个资源,若某步失败则会执行到下面的回滚步骤 */
-rollback:
-   switch (rollback_step) {
-      case 3:
-	 /* 失败时,将file_table中的相应位清空 */
-	 memset(&file_table[fd_idx], 0, sizeof(struct file)); 
-      case 2:
-	 sys_free(new_file_inode);
-      case 1:
-	 /* 如果新文件的i结点创建失败,之前位图中分配的inode_no也要恢复 */
-	 cur_part->inode_bitmap.bitmap_set(inode_no, 0);
-     //bitmap_set(&cur_part->inode_bitmap, inode_no, 0);
-	 break;
-   }
-   sys_free(io_buf);
-   return -1;
 }
 
 /* 打开编号为inode_no的inode对应的文件,若成功则返回文件描述符,否则返回-1 */
@@ -200,17 +203,16 @@ int32_t file_open(uint32_t inode_no, uint8_t flag) {
    file_table[fd_idx].fd_flag = flag;
    bool* write_deny = &file_table[fd_idx].fd_inode->write_deny; 
 
-   if (flag == O_WRONLY || flag == O_RDWR) {	// 只要是关于写文件,判断是否有其它进程正写此文件
-						// 若是读文件,不考虑write_deny
+   if (flag == O_WRONLY || flag == O_RDWR) {	// 只要是关于写文件,判断是否有其它进程正写此文件 若是读文件,不考虑write_deny
    /* 以下进入临界区前先关中断 */
       enum intr_status old_status = intr_disable();
       if (!(*write_deny)) {    // 若当前没有其它进程写该文件,将其占用.
-	 *write_deny = true;   // 置为true,避免多个进程同时写此文件
-	 intr_set_status(old_status);	  // 恢复中断
+	      *write_deny = true;   // 置为true,避免多个进程同时写此文件
+	      intr_set_status(old_status);	  // 恢复中断
       } else {		// 直接失败返回
-	 intr_set_status(old_status);
-	 printfk("file can`t be write now, try again later\n");
-	 return -1;
+	      intr_set_status(old_status);
+	      printfk("file can`t be write now, try again later\n");
+	      return -1;
       }
    }  // 若是读文件或创建文件,不用理会write_deny,保持默认
    return pcb_fd_install(fd_idx);
@@ -244,7 +246,7 @@ int32_t file_write(struct file* file, const void* buf, uint32_t count) {
       return -1;
    }
 
-   const uint8_t* src = buf;        // 用src指向buf中待写入的数据 
+   const uint8_t* src = (const uint8_t*)buf;        // 用src指向buf中待写入的数据 
    uint32_t bytes_written = 0;	    // 用来记录已写入数据大小
    uint32_t size_left = count;	    // 用来记录未写入数据大小
    int32_t block_lba = -1;	    // 块地址
@@ -404,7 +406,7 @@ int32_t file_write(struct file* file, const void* buf, uint32_t count) {
 	 ide_read(cur_part->my_disk, sec_lba, io_buf, 1);
 	 first_write_block = false;
       }
-      memcpy(io_buf + sec_off_bytes, src, chunk_size);
+      memcpy(io_buf + sec_off_bytes, (void*)src, chunk_size);
       ide_write(cur_part->my_disk, sec_lba, io_buf, 1);
 
       src += chunk_size;   // 将指针推移到下个新数据

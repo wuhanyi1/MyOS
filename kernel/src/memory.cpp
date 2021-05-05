@@ -31,7 +31,7 @@ lock k_block_desc_lock; //内核的内存块描述符数组的锁，内核的这
 
 /*凡是涉及到对地址池操作的统统加锁*/
 
-//在对应的内存池中申请pg_cnt页，并设置好位图，返回申请的页的地址
+//在对应的内存池中申请pg_cnt页，并设置好位图，返回申请的页的地址.这个函数本身不是互斥的
 void* pool::addr_get(uint32_t pg_cnt) {
    int bit_idx_start = -1;
    uint32_t cnt = 0;

@@ -11,6 +11,8 @@
 #include "super_block.h"
 #include "thread.h"
 
+extern struct partition* cur_part;
+
 /* 用来存储inode位置 */
 struct inode_position {
    bool	 two_sec;	// inode是否跨扇区
@@ -82,8 +84,8 @@ struct inode* inode_open(struct partition* part, uint32_t inode_no) {
    while (elem != &part->open_inodes.tail) {
       inode_found = elem2entry(struct inode, inode_tag, elem);
       if (inode_found->i_no == inode_no) {
-	 inode_found->i_open_cnts++;
-	 return inode_found;
+	    inode_found->i_open_cnts++;
+	    return inode_found;
       }
       elem = elem->next;
    }
@@ -96,7 +98,7 @@ struct inode* inode_open(struct partition* part, uint32_t inode_no) {
 
 /* 为使通过sys_malloc创建的新inode被所有任务共享,
  * 需要将inode置于内核空间,故需要临时
- * 将cur_pbc->pgdir置为NULL */
+ * 将cur_pbc->pgdir置为nullptr,用以在内核内存池分配空间 */
    struct task_struct* cur = running_thread();
    uint32_t* cur_pagedir_bak = cur->pgdir;
    cur->pgdir = nullptr;
@@ -128,12 +130,12 @@ struct inode* inode_open(struct partition* part, uint32_t inode_no) {
 }
 
 /* 关闭inode或减少inode的打开数 */
-void inode_close(struct partition* part,struct inode* inode) {
+void inode_close(struct inode* inode) {
    /* 若没有进程再打开此文件,将此inode去掉并释放空间 */
    enum intr_status old_status = intr_disable();
    
    if (--inode->i_open_cnts == 0) {
-      part->open_inodes.remove(&inode->inode_tag);
+      cur_part->open_inodes.remove(&inode->inode_tag);
       //list_remove(&inode->inode_tag);	  // 将I结点从part->open_inodes中去掉
    /* inode_open时为实现inode被所有进程共享,
     * 已经在sys_malloc为inode分配了内核空间,
@@ -229,7 +231,7 @@ void inode_release(struct partition* part, uint32_t inode_no) {
    sys_free(io_buf);
    /***********************************************/
     
-   inode_close(part,inode_to_del);
+   inode_close(inode_to_del);
 }
 
 /* 初始化new_inode */

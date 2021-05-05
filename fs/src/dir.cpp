@@ -110,7 +110,7 @@ void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, stru
    /* 初始化目录项 */
    memcpy(p_de->filename, filename, strlen(filename));
    p_de->i_no = inode_no;
-   p_de->f_type = file_type;
+   p_de->f_type = (enum file_types)file_type;
 }
 
 /* 将目录项p_de写入父目录parent_dir中,io_buf由主调函数提供 */
@@ -119,7 +119,7 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
    uint32_t dir_size = dir_inode->i_size;
    uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
 
-   //ASSERT(dir_size % dir_entry_size == 0);	 // dir_size应该是dir_entry_size的整数倍
+   ASSERT(dir_size % dir_entry_size == 0);	 // dir_size应该是dir_entry_size的整数倍
 
    uint32_t dir_entrys_per_sec = (512 / dir_entry_size);       // 每扇区最大的目录项数目
    int32_t block_lba = -1;
@@ -238,8 +238,8 @@ bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_n
    while (block_idx < 140) {
       is_dir_first_block = false;
       if (all_blocks[block_idx] == 0) {
-	 block_idx++;
-	 continue;
+	    block_idx++;
+	    continue;
       }
       dir_entry_idx = dir_entry_cnt = 0;
       memset(io_buf, 0, SECTOR_SIZE);
@@ -265,7 +265,7 @@ bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_n
       } 
 
       /* 若此扇区未找到该目录项,继续在下个扇区中找 */
-      if (dir_entry_found == NULL) {
+      if (dir_entry_found == nullptr) {
 	 block_idx++;
 	 continue;
       }

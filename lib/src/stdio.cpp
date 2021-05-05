@@ -3,7 +3,7 @@
 //#include "stdio.h"
 #include "syscall.h"
 #include "k_printf.h"
-
+#include "string.h"
 #include "stdint.h"
 //整数转换为字符串存到buf中
 int ITOA(int val, char* buf,int radix)
@@ -203,5 +203,5 @@ void printf(const char* format, ...) {
 		}
 	}
 	buf[index] = '\0';//加个结尾
-    write(buf);//系统函数写入
+    write(1, buf, strlen(buf)); //系统函数写入
 }

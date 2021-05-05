@@ -8,6 +8,7 @@
 #include "syscall.h"
 #include "stdio.h"
 #include "memory.h"
+#include "fs.h"
 void printf(const char*,...);
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -18,10 +19,16 @@ int main(void) {
    k_printf("I am kernel\n");
    init_all();
    intr_enable();
+   
    //process_execute((void*)u_prog_a, (char*)"u_prog_a");
    //process_execute((void*)u_prog_b, (char*)"u_prog_b");
    //thread_create((char*)"k_thread_a", 300, k_thread_a, (void*)"I am thread_a");
    //thread_create((char*)"k_thread_b", 31, k_thread_b, (void*)"I am thread_b");
+   uint32_t fd = sys_open("/file1", O_CREAT);
+   printf("fd:%d\n", fd);
+   sys_write(fd, "hello,world\n", 12);
+   sys_close(fd);
+   printf("%d closed now\n", fd);
    while(1);
    return 0;
 }

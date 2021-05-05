@@ -74,7 +74,7 @@ struct boot_sector {
    uint16_t signature;		 // 启动扇区的结束标志是0x55,0xaa,
 } __attribute__ ((packed));
 
-/* 选择读写的硬盘 */
+/* 选择读写的硬盘,即向device寄存发送状态字表明选中哪个磁盘(主盘或从盘) */
 static void select_disk(struct disk* hd) {
    uint8_t reg_device = BIT_DEV_MBS | BIT_DEV_LBA;
    if (hd->dev_no == 1) {	// 若是从盘就置DEV位为1
@@ -148,10 +148,7 @@ static bool busy_wait(struct disk* hd) {
 
 /* 从硬盘读取sec_cnt个扇区到buf */
 void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) { 
-   //ASSERT(lba <= max_lba);
-   //ASSERT(sec_cnt > 0);
    hd->my_channel->lock.lock_acquire();
-   //lock_acquire (&hd->my_channel->lock);
 
 /* 1 先选择操作的硬盘 */
    select_disk(hd);
@@ -360,9 +357,9 @@ static bool partition_info(struct list_elem* pelem, int arg UNUSED) {
 void ide_init() {
    printfk("ide_init start\n");
    uint8_t hd_cnt = *((uint8_t*)(0x475));	      // 获取硬盘的数量
-   //ASSERT(hd_cnt > 0);
+   
    partition_list.init();
-   //list_init(&partition_list);
+   
    channel_cnt = DIV_ROUND_UP(hd_cnt, 2);	   // 一个ide通道上有两个硬盘,根据硬盘数量反推有几个ide通道
    struct ide_channel* channel;
    uint8_t channel_no = 0, dev_no = 0; 

@@ -92,9 +92,10 @@ struct task_struct {
    uint8_t priority;    // 我们这里优先级就是每个进程、线程能运行的时钟周期数
    uint8_t ticks;	   // 每次在处理器上执行的时间嘀嗒数
 
-/* 此任务自上cpu运行后至今占用了多少cpu嘀嗒数,
- * 也就是此任务执行了多久*/
+/* 此任务自上cpu运行后至今占用了多少cpu嘀嗒数,也就是此任务执行了多久*/
    uint32_t elapsed_ticks;
+
+   int32_t fd_table[MAX_FILES_OPEN_PER_PROC];	// 文件描述符数组
 
 /* general_tag的作用是用于线程在一般的队列中的结点 */
    list_elem general_tag;				    
@@ -102,13 +103,12 @@ struct task_struct {
 /* all_list_tag的作用是用于线程队列thread_all_list中的结点 */
    list_elem all_list_tag;
 
-   uint32_t* pgdir;              // 进程自己页目录表的虚拟地址，这个变量不为NULL就是进程，为NULL就是线程
+   uint32_t* pgdir;              // 进程自己页目录表的虚拟地址，这个变量不为nullptr就是进程，为nullptr就是线程
 
    pool userprog_vaddr;   // 用户进程的虚拟地址池,内核线程的PCB这个字段没用
 
    mem_block_desc u_block_desc[DESC_CNT];//用于管理用户堆区小内存块的分配与回收
    
-   int32_t fd_table[MAX_FILES_OPEN_PER_PROC];	// 已打开文件数组
    uint32_t cwd_inode_nr;	 // 进程所在的工作目录的inode编号
 
    uint32_t stack_magic;	 // 用这串数字做栈的边界标记,用于检测栈的溢出，即防止栈向下扩展太多覆盖掉PCB的内容

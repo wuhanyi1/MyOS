@@ -110,6 +110,16 @@ void task_struct::init(char* name, int prio,thread_func function, void* func_arg
    ticks = prio;
    elapsed_ticks = 0;
    pgdir = nullptr;
+   /* 预留标准输入输出 */
+   fd_table[0] = 0;
+   fd_table[1] = 1;
+   fd_table[2] = 2;
+   /* 其余的全置为-1 */
+   uint8_t fd_idx = 3;
+   while (fd_idx < MAX_FILES_OPEN_PER_PROC) {
+      fd_table[fd_idx] = -1;
+      fd_idx++;
+   }
    stack_magic = 0x19870916;	  // 自定义的魔数
    
    /* 先预留中断使用栈的空间,可见thread.h中定义的结构 */
@@ -158,8 +168,6 @@ void schedule() {
 
    struct task_struct* cur = running_thread(); 
    if (cur->status == TASK_RUNNING) { // 若此线程只是cpu时间片到了,将其加入到就绪队列尾
-      //ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
-      //list_append(&thread_ready_list, &cur->general_tag);
       thread_ready_list.push_front(&cur->general_tag);
       cur->ticks = cur->priority;     // 重新将当前线程的ticks再重置为其priority;
       cur->status = TASK_READY;
@@ -169,10 +177,7 @@ void schedule() {
    }
 
    thread_tag = nullptr;	  // thread_tag清空
-//    k_printf("readylist remain %d \n",thread_ready_list.size);
-//    if(thread_ready_list.size == 0){
-//        k_printf("ready list is empty!!!!!!!!\n");
-//    }
+
 /* 将thread_ready_list队列中的第一个就绪线程弹出,准备将其调度上cpu. */
    if(thread_ready_list.is_empty()){//如果就绪队列为空，将idle_thread线程唤醒
       idle_thread->thread_unblock();
@@ -195,7 +200,7 @@ void thread_init(void) {
    pid_lock.init();
 /* 将当前main函数创建为线程 */
    make_main_thread();
-   idle_thread = thread_create("idle",10,idle,nullptr);//初始化idle线程
+   idle_thread = thread_create((char*)"idle",10,idle,nullptr);//初始化idle线程
    k_printf("thread_init done\n");
 }
 

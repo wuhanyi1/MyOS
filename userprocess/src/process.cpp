@@ -96,7 +96,7 @@ uint32_t* create_page_dir(void) {
    return page_dir_vaddr;
 }
 
-/* 创建用户进程虚拟地址位图 */
+/* 创建用户进程虚拟地址位图,用户虚拟地址空间从USER_VADDR_START到0xc0000000 */
 void create_user_vaddr_bitmap(struct task_struct* user_prog) {
     user_prog->userprog_vaddr.pool_bitmap.init();
     user_prog->userprog_vaddr.addr_start = USER_VADDR_START;
